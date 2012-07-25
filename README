@@ -1,0 +1,7 @@
+Instructions:
+
+cd ~
+git clone https://github.com/adrelanos/PasswordTrainer.git
+cd PasswordTrainer
+chmod +x pwtrain
+./pwtrain
