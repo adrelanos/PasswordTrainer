@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# See LICENSE in root of aos source for copyright, license and authors.
+
 DEBUG="0"
 
 if [ "$DEBUG" = 1 ]; then
