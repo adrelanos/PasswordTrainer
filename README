@@ -1,7 +1,11 @@
+Version:
+Password Trainer 0.0.1
+
 Instructions:
 (Should work on Debian and Ubuntu.)
 (Minor tweaks needed for other distros.)
 
+sudo apt-get install bash zenity
 cd ~
 git clone https://github.com/adrelanos/PasswordTrainer.git
 cd PasswordTrainer
