@@ -1,0 +1,139 @@
+#!/bin/bash
+
+DEBUG="0"
+
+if [ "$DEBUG" = 1 ]; then
+   set -x
+fi
+
+pwtrain_help() {
+   echo "
+         -help show this help
+         -train
+         -delete your password
+        "
+   exit 0
+}
+
+pwtrain_variables() {
+   USER="`whoami`"
+   HOMEFOLDER="/home/$USER"
+   STORE_SHA512SUM="$HOMEFOLDER/pwtrain/sha512sum"
+   # For donations.
+   BITCOIN_ADDRESS="1JgzCCSox56Sh4NnQJqRiwoxKi8oVSZBEd"  
+}
+
+pwtrain_train() {
+   mkdir -p "$HOMEFOLDER/pwtrain"
+
+   if [ -f "$STORE_SHA512SUM" ]; then
+      ##echo "$STORE_SHA512SUM does exist."
+      pwtrain_check
+   else
+      ##echo "$STORE_SHA512SUM does not exist."
+      TITLE="Welcome to PasswordTrainer!"
+      TEXT="
+               This programm asks for a password. Enter a password which you like to remember.
+
+               The password will be stored in $HOMEFOLDER/pwtrain/sha512sum as a sha512sum.
+               This script will never store it in cleartext.
+
+               Although as in 2012 it is impossible to revert the hash back to cleartext (your password),
+               you should not run this script unless you are using Full Disk Encryption,
+               where you encrypt everything including swap. (To ensure the operating system will never
+               swap your password in cleartext.)
+
+               Please enter the password you want to train.
+       "
+
+      PASSWORD="`zenity --forms --add-password="Password:" --title "$TITLE" --text "$TEXT"`"
+      #read -s PASSWORD
+      #read PASSWORD
+      ##echo "password: $PASSWORD"
+      # The -b is a "cheat" to prevent "  -" to become " -" after echo.
+      SHASUM="`echo $PASSWORD | sha512sum -b`"
+      ##echo "SHASUM: \"$SHASUM\""
+      echo -e "$SHASUM" > $STORE_SHA512SUM
+      pwtrain_check
+   fi
+}
+
+pwtrain_check() {
+   SHASUM_FILE="`cat $STORE_SHA512SUM`"
+   ##echo "SHASUM: \"$SHASUM_FILE\""
+
+   TITLE="Welcome to PasswordTrainer!"
+   TEXT="
+         (In case you want to delete your password run pwtrain -delete
+          or delete $STORE_SHA512SUM.)
+
+         You have stored a password. Please enter that password.
+        "
+   PASS="`zenity --forms --add-password="Password:" --title "$TITLE" --text "$TEXT"`"
+   #read -s PASS
+   #read PASS
+   ##echo "pass: $PASS"
+   SHASUM_CHECK="`echo $PASS | sha512sum -b`"
+   ##echo "SHASUM_CHECK: \"$SHASUM_CHECK\""
+
+   if [ "$SHASUM_FILE" = "$SHASUM_CHECK" ]; then
+      TEXT="Password correct!                                    
+
+Please support the aos's hosting and development, donate Bitcoin to:
+$BITCOIN_ADDRESS"
+      zenity --info --title "$TITLE" --text "$TEXT"
+      exit 0
+   else
+      TEXT="Password Incorrect!                                  "
+      zenity --error --title "$TITLE" --text "$TEXT"
+
+      TEXT="Want to try again?                                   "
+
+      if zenity --question --title "$TITLE" --text="$TEXT"; then
+         # echo "yes"
+         pwtrain_check
+      else
+         # echo "no"
+         exit 0
+      fi
+   fi
+}
+
+pwtrain_delete() {
+   set -x
+   rm $STORE_SHA512SUM
+}
+
+################################################################ 
+# -help                                                        #
+################################################################ 
+if [[ "$1" = "-help" ]]; then
+   pwtrain_variables
+   pwtrain_help
+   exit 0
+fi
+
+################################################################ 
+# -train                                                       #
+################################################################ 
+if [[ "$1" = "-train" ]]; then
+   pwtrain_variables
+   pwtrain_train
+   exit 0
+fi
+
+################################################################ 
+# -delete                                                      #
+################################################################ 
+if [[ "$1" = "-delete" ]]; then
+   pwtrain_variables
+   pwtrain_delete
+   exit 0
+fi
+
+################################################################ 
+# no option choosen                                            #
+################################################################ 
+pwtrain_variables
+pwtrain_train
+exit 0
